@@ -59,6 +59,9 @@ if (testDataDir) app.setPath('userData', path.resolve(testDataDir));
 
 /** %APPDATA%\Secret Santa - the only place the app writes. */
 const dataDir = app.getPath('userData');
+// Chromium's own caches and browser storage go in a subfolder, so the data
+// folder itself holds only the person's files. The app never uses any of it.
+app.setPath('sessionData', path.join(dataDir, 'chromium'));
 const log = new storage.Log(path.join(dataDir, 'logs'), !app.isPackaged);
 const bases: Record<storage.Base, string> = { userData: dataDir, app: appDir };
 

@@ -96,6 +96,8 @@ Everything is saved as you type; the header says **All changes saved**.
   - `settings.json` holds the window size and position, and the graphics mode.
   - `logs\main.log` is technical detail for troubleshooting. Names and draws are
     never written to it.
+  - `chromium\` holds the browser engine's own caches. The app keeps nothing of
+    yours there, and it's safe to delete while Secret Santa is closed.
 - **Export backup** saves everything to a file you choose. **Import backup**
   reads one back, including backups from the older single-file browser version
   (`secret-santa-offline-plus.html`). That's how to move your old exchange over.
