@@ -266,6 +266,10 @@ test('typing right before closing is still saved', async () => {
   await page.fill('#giftNote', 'Wrap it in newspaper');
   await closeWindow(app);
   assert.equal(exchangeOf(dataDir).details.giftNote, 'Wrap it in newspaper');
+  // It was saved because the window answered the "save now" request - not
+  // because the main process gave up waiting and the automatic save happened
+  // to land in the meantime.
+  assert.doesNotMatch(readLog(dataDir), /took too long to save/);
 });
 
 test('closing the window ends every process the app started', async () => {
