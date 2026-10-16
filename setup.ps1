@@ -125,8 +125,17 @@ function Get-InstalledApp {
         $item = Get-ItemProperty $key.PSPath
         $props = $item.PSObject.Properties
         if ($null -ne $props['DisplayName'] -and [string]$item.DisplayName -like "$AppName*") {
-            $location = $null
+            # The per-user installer doesn't record InstallLocation, so work the
+            # folder out from the program's icon path, or else the uninstaller's.
+            $location = ''
             if ($null -ne $props['InstallLocation']) { $location = [string]$item.InstallLocation }
+            if ($location -eq '' -and $null -ne $props['DisplayIcon']) {
+                $icon = ([string]$item.DisplayIcon) -replace ',\d+$', '' -replace '"', ''
+                if ($icon -ne '') { $location = Split-Path $icon -Parent }
+            }
+            if ($location -eq '' -and $null -ne $props['UninstallString'] -and [string]$item.UninstallString -match '^"([^"]+)"') {
+                $location = Split-Path $Matches[1] -Parent
+            }
             $version = $null
             if ($null -ne $props['DisplayVersion']) { $version = [string]$item.DisplayVersion }
             return [pscustomobject]@{
@@ -194,8 +203,9 @@ function Invoke-Check {
     $installed = Get-InstalledApp
     if ($null -eq $installed) { Missing 'Secret Santa is not installed' }
     else {
-        $exe = Join-Path ([string]$installed.InstallLocation) "$AppName.exe"
-        if (Test-Path $exe) { Good "Installed: version $($installed.Version) in $($installed.InstallLocation)" }
+        $exe = ''
+        if ([string]$installed.InstallLocation -ne '') { $exe = Join-Path ([string]$installed.InstallLocation) "$AppName.exe" }
+        if ($exe -ne '' -and (Test-Path $exe)) { Good "Installed: version $($installed.Version) in $($installed.InstallLocation)" }
         else { Missing "Windows lists Secret Santa as installed, but $exe is missing" }
     }
     $shortcut = Get-Shortcut
@@ -344,6 +354,7 @@ function Invoke-Setup {
     # Check what the installer did, and never leave a shortcut that opens nothing.
     $installed = Get-InstalledApp
     if ($null -eq $installed) { Stop-Setup "The installer finished, but Windows doesn't list Secret Santa as installed." }
+    if ([string]$installed.InstallLocation -eq '') { Stop-Setup "The installer finished, but Windows doesn't say where Secret Santa was installed." }
     $exe = Join-Path ([string]$installed.InstallLocation) "$AppName.exe"
     if (-not (Test-Path $exe)) { Stop-Setup "The installer finished, but $exe is missing." }
     $shortcut = Get-Shortcut
