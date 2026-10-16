@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Must stay identical to CSP in src/main/policy.ts; a test checks this. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secret Santa</title>
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="eyebrow">A little holiday magic</div>
+      <h1 class="brand">SECRET SANTA</h1>
+      <p class="tagline">Same crew. New surprises. 🎁</p>
+    </div>
+    <div class="status-card">
+      <b>● Offline app</b>
+      <span>Everything stays on this computer</span>
+      <span class="save-state" id="saveState" role="status" aria-live="polite">All changes saved</span>
+    </div>
+  </div>
+</header>
+
+<div class="banner" id="appNotice" role="status" aria-live="polite" hidden></div>
+
+<main>
+  <section class="panel" id="setup" aria-labelledby="setupTitle">
+    <h2 class="section-title" id="setupTitle"><span class="num">1</span> Participants &amp; exchange</h2>
+    <label for="names">Names <small>(one per line)</small></label>
+    <textarea id="names" maxlength="40000" placeholder="Alex&#10;Jordan&#10;Sam&#10;Taylor" spellcheck="false"></textarea>
+    <div class="count" id="count">0 participants</div>
+    <div class="actions">
+      <button class="btn secondary" id="importNames" type="button">Import names (.txt)</button>
+      <button class="btn subtle" id="clearNames" type="button">Clear names</button>
+    </div>
+
+    <div class="formgrid gap-top">
+      <div><label for="eventName">Exchange name</label><input id="eventName" maxlength="200" placeholder="Family Secret Santa"></div>
+      <div><label for="budget">Gift budget</label><input id="budget" maxlength="200" placeholder="$25"></div>
+      <div><label for="eventDate">Exchange date</label><input id="eventDate" type="date"></div>
+      <div><label for="giftNote">Gift note</label><input id="giftNote" maxlength="200" placeholder="Keep it fun!"></div>
+    </div>
+    <label class="checkbox"><input type="checkbox" id="noTwoWay"> Prevent two people drawing each other (A ↔ B)</label>
+
+    <h3 class="subhead">Keep-apart rules</h3>
+    <p class="muted small">These pairs can't draw each other, in either direction.</p>
+    <div id="rules"></div>
+    <div class="actions">
+      <button class="btn secondary" id="addRule" type="button">+ Add rule</button>
+      <button class="btn" id="draw" type="button">🎲 Generate assignments</button>
+    </div>
+    <div class="notice" id="setupMessage" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" id="assignments" aria-labelledby="assignmentsTitle">
+    <div class="results-head">
+      <h2 class="section-title flush" id="assignmentsTitle"><span class="icon">🎁</span> Secret assignments</h2>
+      <span class="pill" id="resultCount">Not drawn yet</span>
+    </div>
+    <p class="muted" id="resultIntro">Generate a draw to get started. Click a row to reveal a match.</p>
+    <div class="notice warn" id="staleNotice" hidden>The names have changed since this draw. Generate a new draw to include everyone.</div>
+    <div id="results" class="results"></div>
+    <div class="actions" id="resultActions" hidden>
+      <button class="btn" id="privateReveal" type="button">🔒 Private reveal</button>
+      <button class="btn secondary" id="printSlips" type="button">🖨 Print secret slips</button>
+      <button class="btn secondary" id="saveSlipsPdf" type="button">Save slips as PDF</button>
+      <button class="btn subtle" id="hideAll" type="button">Hide all</button>
+    </div>
+    <div class="notice" id="resultMessage" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="panel wide" id="workshop" aria-labelledby="workshopTitle">
+    <h2 class="section-title" id="workshopTitle">✨ Santa's workshop</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab active" type="button" role="tab" data-tab="scratch" aria-selected="true">Scratch reveal</button>
+      <button class="tab" type="button" role="tab" data-tab="wheel" aria-selected="false">Naughty or Nice wheel</button>
+      <button class="tab" type="button" role="tab" data-tab="wish" aria-selected="false">Wish lists</button>
+      <button class="tab" type="button" role="tab" data-tab="challenge" aria-selected="false">Gift challenges</button>
+      <button class="tab" type="button" role="tab" data-tab="history" aria-selected="false">Previous years</button>
+    </div>
+
+    <div class="subpanel active" id="tab-scratch" role="tabpanel">
+      <p class="muted">Scratch the gold coating with the mouse to reveal each recipient. Double-click a card to uncover it all at once. This is a party reveal, not a secure barrier.</p>
+      <div id="scratchCards" class="cards"></div>
+      <div class="actions"><button class="btn secondary" id="resetScratch" type="button">Reset scratch cards</button></div>
+    </div>
+
+    <div class="subpanel" id="tab-wheel" role="tabpanel">
+      <div class="wheel-wrap">
+        <div class="wheel-box"><span class="pointer" aria-hidden="true">▼</span><canvas id="wheel" width="500" height="500" aria-label="Naughty or Nice spinner"></canvas></div>
+        <div>
+          <h3 class="subhead flush-top">Who's next?</h3>
+          <p class="muted">Spin to pick someone at random for the next reveal. Anyone already picked leaves the wheel until you reset it.</p>
+          <div class="actions">
+            <button class="btn" id="spin" type="button">🎡 Spin the wheel</button>
+            <button class="btn secondary" id="resetWheel" type="button">Reset wheel</button>
+          </div>
+          <div class="notice" id="wheelResult" role="status" aria-live="polite">Ready when you are.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subpanel" id="tab-wish" role="tabpanel">
+      <p class="muted">Write down helpful gift clues. They're saved as you type, shown with the private reveal, and included in backups.</p>
+      <div id="wishLists" class="wish-grid"></div>
+    </div>
+
+    <div class="subpanel" id="tab-challenge" role="tabpanel">
+      <p class="muted">Pick a playful rule for this year's exchange.</p>
+      <div class="challenge" id="challengeText">Your challenge awaits…</div>
+      <div class="actions">
+        <button class="btn" id="newChallenge" type="button">🎄 Deal me a challenge</button>
+        <button class="btn secondary" id="copyChallenge" type="button">Copy challenge</button>
+      </div>
+      <div class="notice" id="challengeMessage" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="subpanel" id="tab-history" role="tabpanel">
+      <p class="muted">Save finished draws as previous years. With the option below turned on, a new draw won't repeat any giver → recipient pair from a saved year.</p>
+      <label class="checkbox"><input type="checkbox" id="avoidPrevious"> Avoid repeating pairs from saved previous years</label>
+      <div class="actions">
+        <button class="btn secondary" id="saveYear" type="button">Save current draw as a year</button>
+        <button class="btn danger" id="clearHistory" type="button">Clear history</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+      <div class="notice" id="historyMessage" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="panel wide" id="yourData" aria-labelledby="dataTitle">
+    <h2 class="section-title" id="dataTitle">🔐 Your data</h2>
+    <p class="flush">Secret Santa never uses the internet. Your exchange is saved on this computer as you work, in your Windows profile's Secret Santa folder. Export a backup to keep a copy somewhere else or move it to another computer; backups from the older browser version of Secret Santa import here too. Anyone who can open this app on this computer can see the whole draw, so for real secrecy print the slips and hand them out privately.</p>
+    <div class="actions">
+      <button class="btn secondary" id="exportBackup" type="button">Export backup</button>
+      <button class="btn secondary" id="importBackup" type="button">Import backup</button>
+      <button class="btn subtle" id="openDataFolder" type="button">Open data folder</button>
+    </div>
+    <div class="notice" id="dataMessage" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="foot wide">Made for good people and better gifts · No internet required</p>
+</main>
+
+<div id="slips" class="slips" aria-hidden="true"></div>
+
+<dialog id="pickDialog" aria-labelledby="pickTitle">
+  <div class="eyebrow dark">Private reveal</div>
+  <h2 id="pickTitle">Who's looking?</h2>
+  <p class="muted">Make sure nobody else can see the screen, then choose your name.</p>
+  <label for="pickName">Your name</label>
+  <select id="pickName"></select>
+  <div class="actions">
+    <button class="btn" id="pickShow" type="button">Show my match</button>
+    <button class="btn subtle" id="pickCancel" type="button">Cancel</button>
+  </div>
+</dialog>
+
+<dialog id="revealDialog" aria-labelledby="revealTitle">
+  <div class="eyebrow dark">Your secret assignment</div>
+  <h2 id="revealTitle">Hi there!</h2>
+  <p>You are buying a gift for:</p>
+  <div class="reveal-name" id="revealName"></div>
+  <p id="revealDetails" class="muted"></p>
+  <div id="revealWishes" class="reveal-wishes" hidden>
+    <div class="eyebrow dark">Their gift clues</div>
+    <p id="revealWishText"></p>
+  </div>
+  <div class="actions"><button class="btn" id="closeReveal" type="button">Got it — keep it secret</button></div>
+</dialog>
+
+<dialog id="confirmDialog" aria-labelledby="confirmText">
+  <p id="confirmText" class="confirm-text"></p>
+  <div class="actions">
+    <button class="btn danger-solid" id="confirmYes" type="button">Yes</button>
+    <button class="btn subtle" id="confirmNo" type="button">Cancel</button>
+  </div>
+</dialog>
+</body>
+</html>

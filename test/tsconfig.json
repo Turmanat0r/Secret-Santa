@@ -1,0 +1,14 @@
+{
+  // Type-checks the tests. Node runs them directly (it strips the types),
+  // so nothing here is ever compiled to disk.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["es2023", "dom"],
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["*.ts", "../src/main/*.ts", "../src/shared/*.d.ts"]
+}

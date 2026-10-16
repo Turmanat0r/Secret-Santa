@@ -1,0 +1,6 @@
+# Pin line endings so a checkout on Windows doesn't rewrite every file.
+* text=auto eol=lf
+# Windows PowerShell 5.1 expects CRLF in its scripts.
+*.ps1 text eol=crlf
+*.png binary
+*.ico binary

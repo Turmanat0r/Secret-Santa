@@ -1,0 +1,14 @@
+{
+  // The main process: the only code that can reach Node and the computer.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["es2023"],
+    "types": ["node"],
+    "rootDir": ".",
+    "outDir": "../../dist/main",
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["*.ts", "*.cts", "../shared/*.d.ts"]
+}

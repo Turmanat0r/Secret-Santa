@@ -1,0 +1,81 @@
+{
+  "name": "secret-santa",
+  "productName": "Secret Santa",
+  "version": "1.0.0",
+  "description": "Organise a Secret Santa draw on your own computer, fully offline.",
+  "author": "Turmanat0r",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc -p src/main && tsc -p src/renderer",
+    "typecheck": "tsc -p src/main --noEmit && tsc -p src/renderer --noEmit && tsc -p test",
+    "start": "npm run build && electron .",
+    "test": "npm run build && tsc -p test && node --test --test-concurrency=1 \"test/*.test.ts\"",
+    "test:unit": "node --test \"test/santa.test.ts\" \"test/storage.test.ts\" \"test/policy.test.ts\"",
+    "package": "npm run build && electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "electron": "44.8.0",
+    "electron-builder": "26.15.3",
+    "playwright-core": "1.64.1",
+    "typescript": "7.0.2"
+  },
+  "build": {
+    "appId": "io.github.turmanat0r.secretsanta",
+    "productName": "Secret Santa",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "requirements.json",
+      "dist/main/*.js",
+      "dist/main/*.cjs",
+      "src/renderer/index.html",
+      "src/renderer/styles.css",
+      "src/renderer/app.js",
+      "assets/icon.png"
+    ],
+    "asar": true,
+    "electronLanguages": [
+      "en-US"
+    ],
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "grantFileProtocolExtraPrivileges": false
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createStartMenuShortcut": true,
+      "createDesktopShortcut": false,
+      "shortcutName": "Secret Santa",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "SecretSanta-${version}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "SecretSanta-${version}-portable.${ext}"
+    },
+    "publish": null
+  },
+  "allowScripts": {
+    "electron-winstaller": false
+  }
+}

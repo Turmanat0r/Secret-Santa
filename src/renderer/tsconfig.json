@@ -1,0 +1,13 @@
+{
+  // The window. It gets the browser's DOM types and nothing from Node:
+  // "types": [] means it cannot even name a Node module, let alone import one.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": [],
+    "rootDir": "."
+  },
+  "include": ["*.ts", "../shared/*.d.ts"]
+}

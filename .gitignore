@@ -1,0 +1,11 @@
+# Installed packages
+node_modules/
+
+# Build output - always regenerated, never committed
+dist/
+release/
+src/renderer/*.js
+
+# Logs and test scratch data
+*.log
+.test-data/

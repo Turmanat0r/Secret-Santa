@@ -1,0 +1,117 @@
+{
+  "about": "Everything Secret Santa needs in order to run. The app walks this list every time it starts (checking, creating or verifying each entry in order) and again when it closes (saving anything marked flushOnExit). Adding a requirement is an edit to this file, not new code. 'base' says where the path starts: 'app' is the installed program, 'userData' is the data folder (%APPDATA%\\Secret Santa).",
+  "requirements": [
+    {
+      "id": "window-page",
+      "what": "The page that lays out the Secret Santa window.",
+      "kind": "app-file",
+      "base": "app",
+      "path": "src/renderer/index.html",
+      "ifMissing": "stop",
+      "ifDamaged": "stop",
+      "holdsMyWork": false,
+      "says": {
+        "missing": "Secret Santa can't open because part of the program (the window layout, index.html) is missing. Run setup.ps1 again to reinstall it."
+      }
+    },
+    {
+      "id": "window-styles",
+      "what": "The colours and layout of the window.",
+      "kind": "app-file",
+      "base": "app",
+      "path": "src/renderer/styles.css",
+      "ifMissing": "stop",
+      "ifDamaged": "stop",
+      "holdsMyWork": false,
+      "says": {
+        "missing": "Secret Santa can't open because part of the program (the window styles, styles.css) is missing. Run setup.ps1 again to reinstall it."
+      }
+    },
+    {
+      "id": "window-script",
+      "what": "The code that runs the window, built from app.ts.",
+      "kind": "app-file",
+      "base": "app",
+      "path": "src/renderer/app.js",
+      "ifMissing": "stop",
+      "ifDamaged": "stop",
+      "holdsMyWork": false,
+      "says": {
+        "missing": "Secret Santa can't open because part of the program (the window code, app.js) hasn't been built. Run setup.ps1 again to build it."
+      }
+    },
+    {
+      "id": "bridge",
+      "what": "The small bridge between the window and the rest of the app, built from preload.cts.",
+      "kind": "app-file",
+      "base": "app",
+      "path": "dist/main/preload.cjs",
+      "ifMissing": "stop",
+      "ifDamaged": "stop",
+      "holdsMyWork": false,
+      "says": {
+        "missing": "Secret Santa can't open because part of the program (preload.cjs) hasn't been built. Run setup.ps1 again to build it."
+      }
+    },
+    {
+      "id": "data-folder",
+      "what": "The folder your exchange is kept in.",
+      "kind": "folder",
+      "base": "userData",
+      "path": ".",
+      "ifMissing": "create",
+      "ifDamaged": "stop",
+      "holdsMyWork": true,
+      "says": {
+        "damaged": "Secret Santa can't open because something that isn't a folder is in the place where its data folder should be."
+      }
+    },
+    {
+      "id": "logs-folder",
+      "what": "The folder for the technical log, which is only for troubleshooting.",
+      "kind": "folder",
+      "base": "userData",
+      "path": "logs",
+      "ifMissing": "create",
+      "ifDamaged": "stop",
+      "holdsMyWork": false,
+      "says": {
+        "damaged": "Secret Santa can't open because something that isn't a folder is where its logs folder should be."
+      }
+    },
+    {
+      "id": "exchange",
+      "what": "Your Secret Santa exchange: names, details, rules, the draw, wish lists and previous years.",
+      "kind": "json-file",
+      "base": "userData",
+      "path": "exchange.json",
+      "shape": "exchange",
+      "backup": "exchange.previous.json",
+      "ifMissing": "create",
+      "ifDamaged": "refuse",
+      "holdsMyWork": true,
+      "flushOnExit": true,
+      "says": {
+        "created": "No saved exchange was found, so Secret Santa started a new, empty one.",
+        "restored": "Your exchange file was missing, so Secret Santa restored the copy it saved when you last opened it.",
+        "damaged": "Your Secret Santa exchange file is damaged, so the app has left it exactly as it is and hasn't opened it."
+      }
+    },
+    {
+      "id": "settings",
+      "what": "The window's size and position, and the graphics mode that works on this computer.",
+      "kind": "json-file",
+      "base": "userData",
+      "path": "settings.json",
+      "shape": "settings",
+      "ifMissing": "create",
+      "ifDamaged": "reset",
+      "holdsMyWork": false,
+      "flushOnExit": true,
+      "says": {
+        "created": "The window settings were missing, so the window size and position were reset.",
+        "reset": "The window settings were damaged, so the window size and position were reset. The damaged file was kept, renamed, in the data folder."
+      }
+    }
+  ]
+}
